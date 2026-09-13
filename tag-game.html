@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 900px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 3px solid #667eea;
+        }
+
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            user-select: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            cursor: move;
+            border: 3px solid #fff;
+        }
+
+        .enemy {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            user-select: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 3px solid #fff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-start:active {
+            transform: scale(0.98);
+        }
+
+        .message {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            min-height: 30px;
+            margin-top: 20px;
+            animation: slideIn 0.5s ease;
+        }
+
+        .message.caught {
+            color: #f5576c;
+        }
+
+        .message.success {
+            color: #4facfe;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .instructions {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .game-area {
+                height: 350px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏃 TAG GAME</h1>
+        
+        <div class="stats">
+            <div class="stat">
+                <div>Escaped</div>
+                <div class="stat-value" id="escaped">0</div>
+            </div>
+            <div class="stat">
+                <div>Caught</div>
+                <div class="stat-value" id="caught">0</div>
+            </div>
+            <div class="stat">
+                <div>Time</div>
+                <div class="stat-value" id="timer">30s</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="player" id="player">🤖</div>
+            <div class="enemy" id="enemy">👾</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-start" onclick="startGame()">▶️ Start Game</button>
+            <button class="btn-start" onclick="resetGame()">🔄 Reset</button>
+        </div>
+
+        <div class="message" id="message">Click Start Game to begin!</div>
+
+        <div class="instructions">
+            <strong>How to Play:</strong><br>
+            🖱️ Move your character (blue circle) using your mouse to stay inside the game area<br>
+            👾 Avoid the enemy (red circle) for 30 seconds<br>
+            ✅ Escape successfully = +1 point<br>
+            ❌ Get caught = -1 point<br>
+            First to 5 wins! 🏆
+        </div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const player = document.getElementById('player');
+        const enemy = document.getElementById('enemy');
+        const messageEl = document.getElementById('message');
+        const timerEl = document.getElementById('timer');
+        const escapedEl = document.getElementById('escaped');
+        const caughtEl = document.getElementById('caught');
+
+        let playerPos = { x: 50, y: 50 };
+        let enemyPos = { x: 400, y: 300 };
+        let escaped = 0;
+        let caught = 0;
+        let gameActive = false;
+        let timeLeft = 30;
+        let gameStarted = false;
+        let roundInProgress = false;
+
+        let gameWidth = 800;
+        let gameHeight = 500;
+        const playerSize = 50;
+        const enemySize = 50;
+        const enemySpeed = 2.5;
+
+        // Update game dimensions when window loads or resizes
+        function updateGameDimensions() {
+            gameWidth = gameArea.offsetWidth;
+            gameHeight = gameArea.offsetHeight;
+        }
+
+        window.addEventListener('load', updateGameDimensions);
+        window.addEventListener('resize', updateGameDimensions);
+
+        // Mouse move listener for player
+        document.addEventListener('mousemove', (e) => {
+            if (!gameActive) return;
+
+            const rect = gameArea.getBoundingClientRect();
+            const x = e.clientX - rect.left - playerSize / 2;
+            const y = e.clientY - rect.top - playerSize / 2;
+
+            playerPos.x = Math.min(Math.max(x, 0), gameWidth - playerSize);
+            playerPos.y = Math.min(Math.max(y, 0), gameHeight - playerSize);
+            
+            updatePlayerPosition();
+        });
+
+        function updatePlayerPosition() {
+            player.style.left = playerPos.x + 'px';
+            player.style.top = playerPos.y + 'px';
+        }
+
+        function updateEnemyPosition() {
+            enemy.style.left = enemyPos.x + 'px';
+            enemy.style.top = enemyPos.y + 'px';
+        }
+
+        function moveEnemy() {
+            if (!gameActive) return;
+
+            const dx = playerPos.x - enemyPos.x;
+            const dy = playerPos.y - enemyPos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 0) {
+                enemyPos.x += (dx / distance) * enemySpeed;
+                enemyPos.y += (dy / distance) * enemySpeed;
+            }
+
+            enemyPos.x = Math.max(0, Math.min(enemyPos.x, gameWidth - enemySize));
+            enemyPos.y = Math.max(0, Math.min(enemyPos.y, gameHeight - enemySize));
+
+            updateEnemyPosition();
+
+            if (checkCollision()) {
+                caught++;
+                endRound(false);
+            }
+        }
+
+        function checkCollision() {
+            const dx = (playerPos.x + playerSize / 2) - (enemyPos.x + enemySize / 2);
+            const dy = (playerPos.y + playerSize / 2) - (enemyPos.y + enemySize / 2);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < playerSize;
+        }
+
+        function startGame() {
+            if (gameStarted || roundInProgress) return;
+            
+            updateGameDimensions();
+            
+            gameActive = true;
+            gameStarted = true;
+            roundInProgress = true;
+            timeLeft = 30;
+            messageEl.textContent = '🎮 Game Started! Avoid the enemy!';
+            messageEl.classList.remove('caught', 'success');
+
+            // Reset positions
+            playerPos = { x: 50, y: 50 };
+            enemyPos = { x: gameWidth - 100, y: gameHeight - 100 };
+            updatePlayerPosition();
+            updateEnemyPosition();
+
+            const gameLoop = setInterval(() => {
+                if (gameActive) {
+                    moveEnemy();
+                } else {
+                    clearInterval(gameLoop);
+                }
+            }, 50);
+
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft + 's';
+
+                if (timeLeft <= 0) {
+                    gameActive = false;
+                    clearInterval(gameLoop);
+                    clearInterval(timerInterval);
+                    escaped++;
+                    endRound(true);
+                }
+            }, 1000);
+        }
+
+        function endRound(success) {
+            gameActive = false;
+            gameStarted = false;
+
+            if (success) {
+                messageEl.textContent = '✅ You Escaped! +1 point';
+                messageEl.classList.add('success');
+                messageEl.classList.remove('caught');
+            } else {
+                messageEl.textContent = '❌ You Got Tagged! -1 point';
+                messageEl.classList.add('caught');
+                messageEl.classList.remove('success');
+            }
+
+            escapedEl.textContent = escaped;
+            caughtEl.textContent = caught;
+
+            // Check win condition
+            if (escaped >= 5) {
+                messageEl.textContent = '🏆 YOU ARE THE TAG CHAMPION! 🏆';
+                messageEl.classList.add('success');
+                roundInProgress = false;
+            } else if (caught >= 5) {
+                messageEl.textContent = '😢 Enemy wins! Game Over!';
+                messageEl.classList.add('caught');
+                roundInProgress = false;
+            } else {
+                setTimeout(() => {
+                    messageEl.textContent = 'Click Start Game for the next round!';
+                    roundInProgress = false;
+                }, 2000);
+            }
+        }
+
+        function resetGame() {
+            gameActive = false;
+            gameStarted = false;
+            roundInProgress = false;
+            escaped = 0;
+            caught = 0;
+            timeLeft = 30;
+            playerPos = { x: 50, y: 50 };
+            enemyPos = { x: gameWidth - 100, y: gameHeight - 100 };
+
+            updatePlayerPosition();
+            updateEnemyPosition();
+            escapedEl.textContent = escaped;
+            caughtEl.textContent = caught;
+            timerEl.textContent = '30s';
+            messageEl.textContent = 'Click Start Game to begin!';
+            messageEl.classList.remove('caught', 'success');
+        }
+
+        // Initialize
+        updateGameDimensions();
+        updatePlayerPosition();
+        updateEnemyPosition();
+    </script>
+</body>
+</html>
