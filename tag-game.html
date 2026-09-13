@@ -327,7 +327,7 @@
                 </div>
             </div>
 
-            <div class="message" id="message">Click Start Game to begin exploring!</div>
+            <div class="message" id="message">Click Start Exploring to begin!</div>
 
             <div class="controls">
                 <button onclick="startGame()">▶️ Start Exploring</button>
@@ -352,7 +352,6 @@
         let escaped = 0;
         let caught = 0;
         let gameActive = false;
-        let gameStarted = false;
 
         const worldWidth = 3000;
         const worldHeight = 2000;
@@ -360,6 +359,7 @@
         const enemySize = 40;
         const enemySpeed = 1.8;
         const npcSpeed = 0.8;
+        let gameLoop = null;
 
         // Create world objects
         function createWorld() {
@@ -530,10 +530,9 @@
         });
 
         function startGame() {
-            if (gameStarted) return;
+            if (gameActive) return;
             
             gameActive = true;
-            gameStarted = true;
             messageEl.textContent = '🎮 Exploration started! Avoid the enemy!';
             messageEl.classList.remove('danger', 'success');
 
@@ -542,12 +541,12 @@
             updatePlayerPosition();
             updateEnemyPosition();
 
-            const gameLoop = setInterval(() => {
+            if (gameLoop) clearInterval(gameLoop);
+            
+            gameLoop = setInterval(() => {
                 if (gameActive) {
                     moveEnemy();
                     updateNPCs();
-                } else {
-                    clearInterval(gameLoop);
                 }
             }, 50);
         }
@@ -581,7 +580,8 @@
 
         function resetGame() {
             gameActive = false;
-            gameStarted = false;
+            if (gameLoop) clearInterval(gameLoop);
+            
             escaped = 0;
             caught = 0;
             playerPos = { x: 1500, y: 1000 };
