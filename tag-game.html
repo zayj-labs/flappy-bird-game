@@ -45,6 +45,7 @@
             background: linear-gradient(135deg, #87ceeb 0%, #e0f6ff 100%);
             top: 0;
             left: 0;
+            transition: none;
         }
 
         .tree {
@@ -148,6 +149,8 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            max-height: 100vh;
+            overflow-y: auto;
         }
 
         .stats {
@@ -259,10 +262,12 @@
 
             .ui-panel {
                 width: 100%;
+                max-height: none;
             }
 
             .game-wrapper {
                 height: 500px;
+                flex: 1;
             }
         }
     </style>
@@ -295,11 +300,11 @@
                 </div>
                 <div class="stat">
                     <span>Position:</span>
-                    <span class="stat-value" id="position">0, 0</span>
+                    <span class="stat-value" id="position">1500, 1000</span>
                 </div>
                 <div class="stat">
                     <span>Distance:</span>
-                    <span class="stat-value" id="distance">0m</span>
+                    <span class="stat-value" id="distance">900m</span>
                 </div>
             </div>
 
@@ -327,7 +332,7 @@
                 </div>
             </div>
 
-            <div class="message" id="message">Click Start Exploring to begin!</div>
+            <div class="message" id="message">Ready to explore! Click Start Exploring!</div>
 
             <div class="controls">
                 <button onclick="startGame()">▶️ Start Exploring</button>
@@ -352,6 +357,7 @@
         let escaped = 0;
         let caught = 0;
         let gameActive = false;
+        let gameLoopId = null;
 
         const worldWidth = 3000;
         const worldHeight = 2000;
@@ -359,10 +365,16 @@
         const enemySize = 40;
         const enemySpeed = 1.8;
         const npcSpeed = 0.8;
-        let gameLoop = null;
 
         // Create world objects
         function createWorld() {
+            // Clear any existing elements first
+            world.innerHTML = '<div class="player" id="player">🤖</div><div class="enemy" id="enemy">👾</div>';
+            
+            // Re-get elements after clearing
+            const playerEl = document.getElementById('player');
+            const enemyEl = document.getElementById('enemy');
+
             // Create trees
             const treePositions = [
                 { x: 300, y: 300 }, { x: 600, y: 500 }, { x: 1000, y: 200 },
@@ -434,10 +446,11 @@
             const cameraCenterX = camera.offsetWidth / 2;
             const cameraCenterY = camera.offsetHeight / 2;
             
-            const offsetX = playerPos.x - cameraCenterX;
-            const offsetY = playerPos.y - cameraCenterY;
+            const offsetX = Math.max(0, Math.min(playerPos.x - cameraCenterX, worldWidth - camera.offsetWidth));
+            const offsetY = Math.max(0, Math.min(playerPos.y - cameraCenterY, worldHeight - camera.offsetHeight));
 
-            world.style.transform = `translate(-${offsetX}px, -${offsetY}px)`;
+            world.style.left = (-offsetX) + 'px';
+            world.style.top = (-offsetY) + 'px';
         }
 
         function updatePlayerPosition() {
@@ -474,8 +487,6 @@
         }
 
         function moveEnemy() {
-            if (!gameActive) return;
-
             const dx = playerPos.x - enemyPos.x;
             const dy = playerPos.y - enemyPos.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -513,15 +524,15 @@
         }
 
         // Mouse move listener for player
-        document.addEventListener('mousemove', (e) => {
+        camera.addEventListener('mousemove', (e) => {
             if (!gameActive) return;
 
             const rect = camera.getBoundingClientRect();
-            const cameraX = parseFloat(world.style.transform.match(/translate\(-?(\d+)/)?.[1] || 0);
-            const cameraY = parseFloat(world.style.transform.match(/,\s*-?(\d+)/)?.[1] || 0);
+            const offsetX = -parseFloat(world.style.left || 0);
+            const offsetY = -parseFloat(world.style.top || 0);
 
-            const x = e.clientX - rect.left + cameraX - playerSize / 2;
-            const y = e.clientY - rect.top + cameraY - playerSize / 2;
+            const x = e.clientX - rect.left + offsetX - playerSize / 2;
+            const y = e.clientY - rect.top + offsetY - playerSize / 2;
 
             playerPos.x = Math.min(Math.max(x, 0), worldWidth - playerSize);
             playerPos.y = Math.min(Math.max(y, 0), worldHeight - playerSize);
@@ -530,10 +541,11 @@
         });
 
         function startGame() {
+            console.log('Starting game...');
             if (gameActive) return;
             
             gameActive = true;
-            messageEl.textContent = '🎮 Exploration started! Avoid the enemy!';
+            messageEl.textContent = '🎮 Exploration started! Move your mouse!';
             messageEl.classList.remove('danger', 'success');
 
             playerPos = { x: 1500, y: 1000 };
@@ -541,14 +553,16 @@
             updatePlayerPosition();
             updateEnemyPosition();
 
-            if (gameLoop) clearInterval(gameLoop);
+            if (gameLoopId) clearInterval(gameLoopId);
             
-            gameLoop = setInterval(() => {
+            gameLoopId = setInterval(() => {
                 if (gameActive) {
                     moveEnemy();
                     updateNPCs();
                 }
             }, 50);
+            
+            console.log('Game loop started with ID:', gameLoopId);
         }
 
         function endRound(success) {
@@ -569,18 +583,20 @@
             caughtEl.textContent = caught;
 
             setTimeout(() => {
-                gameActive = true;
-                playerPos = { x: 1500, y: 1000 };
-                enemyPos = { x: 800, y: 600 };
-                updatePlayerPosition();
-                updateEnemyPosition();
-                messageEl.textContent = '🎮 Round continues! Keep exploring!';
+                if (!gameActive) {
+                    gameActive = true;
+                    playerPos = { x: 1500, y: 1000 };
+                    enemyPos = { x: 800, y: 600 };
+                    updatePlayerPosition();
+                    updateEnemyPosition();
+                    messageEl.textContent = '🎮 Round continues! Move your mouse!';
+                }
             }, 2000);
         }
 
         function resetGame() {
             gameActive = false;
-            if (gameLoop) clearInterval(gameLoop);
+            if (gameLoopId) clearInterval(gameLoopId);
             
             escaped = 0;
             caught = 0;
@@ -591,14 +607,17 @@
             updateEnemyPosition();
             escapedEl.textContent = escaped;
             caughtEl.textContent = caught;
-            messageEl.textContent = 'Click Start Exploring to begin!';
+            messageEl.textContent = 'Ready to explore! Click Start Exploring!';
             messageEl.classList.remove('danger', 'success');
         }
 
-        // Initialize
-        createWorld();
-        updatePlayerPosition();
-        updateEnemyPosition();
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, creating world...');
+            createWorld();
+            updatePlayerPosition();
+            updateEnemyPosition();
+        });
     </script>
 </body>
 </html>
