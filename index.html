@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
+    <title>Flappy Air Force 1</title>
     <style>
         * {
             margin: 0;
@@ -30,16 +30,18 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        #bird {
+        #shoe {
             position: absolute;
-            width: 40px;
-            height: 30px;
-            background: #FFD700;
-            border-radius: 50%;
-            border: 2px solid #FFA500;
+            width: 50px;
+            height: 40px;
             left: 50px;
             top: 250px;
             z-index: 10;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scaleX(-1) rotate(-20deg);
         }
 
         .pipe {
@@ -57,6 +59,37 @@
         .pipe-bottom {
             bottom: 0;
             border-top: 8px solid #1a6b1a;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: #FF6B6B;
+            border: 2px solid #CC5555;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .obstacle.spike {
+            background: #FFD700;
+            border-color: #FFA500;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+
+        .obstacle.bomb {
+            background: #333;
+            border-radius: 50%;
+            border-color: #000;
+        }
+
+        .obstacle.block {
+            background: #8B4513;
+            border-color: #654321;
         }
 
         #score {
@@ -131,12 +164,26 @@
             border-radius: 5px;
             z-index: 20;
         }
+
+        #difficulty {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 15px;
+            border-radius: 5px;
+            z-index: 20;
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
-        <div id="bird"></div>
+        <div id="shoe">👟</div>
         <div id="score">Score: 0</div>
+        <div id="difficulty">Level: 1</div>
         <div id="gameOverScreen">
             <div id="gameOverText">GAME OVER</div>
             <div id="finalScore">Final Score: 0</div>
@@ -150,14 +197,15 @@
     <script>
         // Game variables
         const gameContainer = document.getElementById('gameContainer');
-        const bird = document.getElementById('bird');
+        const shoe = document.getElementById('shoe');
         const scoreDisplay = document.getElementById('score');
+        const difficultyDisplay = document.getElementById('difficulty');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const finalScoreDisplay = document.getElementById('finalScore');
         const restartBtn = document.getElementById('restartBtn');
 
-        let birdY = 250;
-        let birdX = 50;
+        let shoeY = 250;
+        let shoeX = 50;
         let velocity = 0;
         const gravity = 0.4;
         const jumpStrength = -10;
@@ -168,6 +216,9 @@
         const pipeWidth = 60;
         let pipeSpawnRate = 90;
         let pipeCounter = 0;
+        let obstacleSpawnRate = 150;
+        let obstacleCounter = 0;
+        let level = 1;
 
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
@@ -183,37 +234,42 @@
         restartBtn.addEventListener('click', restartGame);
 
         function restartGame() {
-            birdY = 250;
+            shoeY = 250;
             velocity = 0;
             score = 0;
             gameOver = false;
             pipeCounter = 0;
+            obstacleCounter = 0;
             gameSpeed = 5;
+            level = 1;
+            pipeSpawnRate = 90;
+            obstacleSpawnRate = 150;
             scoreDisplay.textContent = `Score: ${score}`;
+            difficultyDisplay.textContent = `Level: ${level}`;
             gameOverScreen.classList.remove('show');
             
-            // Remove all pipes
-            document.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+            // Remove all obstacles
+            document.querySelectorAll('.pipe, .obstacle').forEach(element => element.remove());
             
             gameLoop();
         }
 
-        function updateBird() {
+        function updateShoe() {
             if (!gameOver) {
                 velocity += gravity;
-                birdY += velocity;
+                shoeY += velocity;
 
                 // Check boundaries
-                if (birdY <= 0) {
-                    birdY = 0;
+                if (shoeY <= 0) {
+                    shoeY = 0;
                     velocity = 0;
                 }
-                if (birdY + 30 >= 600) {
+                if (shoeY + 40 >= 600) {
                     endGame();
                 }
             }
 
-            bird.style.top = birdY + 'px';
+            shoe.style.top = shoeY + 'px';
         }
 
         function spawnPipe() {
@@ -241,38 +297,72 @@
             }
         }
 
-        function movePipes() {
-            const pipes = document.querySelectorAll('.pipe');
-            pipes.forEach((pipe, index) => {
-                let pipeX = parseFloat(pipe.style.left);
-                pipeX -= gameSpeed;
-                pipe.style.left = pipeX + 'px';
+        function spawnObstacle() {
+            if (obstacleCounter >= obstacleSpawnRate) {
+                const obstacleTypes = ['spike', 'bomb', 'block'];
+                const randomType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                const randomY = Math.random() * (500 - 50) + 50;
 
-                // Remove pipe when off screen
-                if (pipeX < -pipeWidth) {
-                    pipe.remove();
+                const obstacle = document.createElement('div');
+                obstacle.className = `obstacle ${randomType}`;
+                obstacle.style.left = gameContainer.clientWidth + 'px';
+                obstacle.style.top = randomY + 'px';
+                
+                if (randomType === 'spike') {
+                    obstacle.textContent = '⭐';
+                } else if (randomType === 'bomb') {
+                    obstacle.textContent = '💣';
+                } else {
+                    obstacle.textContent = '■';
+                }
+                
+                gameContainer.appendChild(obstacle);
+                obstacleCounter = 0;
+            } else {
+                obstacleCounter++;
+            }
+        }
+
+        function moveObstacles() {
+            const obstacles = document.querySelectorAll('.pipe, .obstacle');
+            obstacles.forEach((element) => {
+                let elementX = parseFloat(element.style.left);
+                elementX -= gameSpeed;
+                element.style.left = elementX + 'px';
+
+                // Remove when off screen
+                if (elementX < -pipeWidth - 50) {
+                    element.remove();
                 }
 
-                // Score point when pipe passes bird
-                if (pipeX === birdX - pipeWidth && !gameOver) {
+                // Score when passing pipe
+                if (element.classList.contains('pipe-top') && elementX === shoeX - pipeWidth && !gameOver) {
                     score++;
                     scoreDisplay.textContent = `Score: ${score}`;
+                    
+                    // Increase difficulty every 5 points
+                    if (score % 5 === 0) {
+                        level = Math.floor(score / 5) + 1;
+                        gameSpeed = 5 + (level - 1) * 0.5;
+                        pipeSpawnRate = Math.max(60, 90 - (level - 1) * 5);
+                        obstacleSpawnRate = Math.max(100, 150 - (level - 1) * 10);
+                        difficultyDisplay.textContent = `Level: ${level}`;
+                    }
                 }
             });
         }
 
         function checkCollisions() {
-            const pipes = document.querySelectorAll('.pipe');
-            const birdRect = bird.getBoundingClientRect();
-            const containerRect = gameContainer.getBoundingClientRect();
+            const allObstacles = document.querySelectorAll('.pipe, .obstacle');
+            const shoeRect = shoe.getBoundingClientRect();
 
-            pipes.forEach(pipe => {
-                const pipeRect = pipe.getBoundingClientRect();
+            allObstacles.forEach(element => {
+                const elementRect = element.getBoundingClientRect();
                 
-                if (birdRect.left < pipeRect.right &&
-                    birdRect.right > pipeRect.left &&
-                    birdRect.top < pipeRect.bottom &&
-                    birdRect.bottom > pipeRect.top) {
+                if (shoeRect.left < elementRect.right &&
+                    shoeRect.right > elementRect.left &&
+                    shoeRect.top < elementRect.bottom &&
+                    shoeRect.bottom > elementRect.top) {
                     endGame();
                 }
             });
@@ -280,15 +370,16 @@
 
         function endGame() {
             gameOver = true;
-            finalScoreDisplay.textContent = `Final Score: ${score}`;
+            finalScoreDisplay.textContent = `Final Score: ${score} (Level ${level})`;
             gameOverScreen.classList.add('show');
         }
 
         function gameLoop() {
             if (!gameOver) {
-                updateBird();
+                updateShoe();
                 spawnPipe();
-                movePipes();
+                spawnObstacle();
+                moveObstacles();
                 checkCollisions();
             }
             requestAnimationFrame(gameLoop);
