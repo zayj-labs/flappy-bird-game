@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tag Game</title>
+    <title>Open World Tag Game</title>
     <style>
         * {
             margin: 0;
@@ -16,269 +16,461 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a2e;
             font-family: 'Arial', sans-serif;
             overflow: hidden;
         }
 
         .container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 900px;
-            width: 90%;
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-        }
-
-        .stats {
             display: flex;
-            justify-content: space-around;
-            margin-bottom: 30px;
+            width: 100vw;
+            height: 100vh;
             gap: 20px;
-            flex-wrap: wrap;
+            padding: 20px;
         }
 
-        .stat {
-            font-size: 1.2em;
-            color: #666;
-        }
-
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .game-area {
+        .game-wrapper {
+            flex: 1;
             position: relative;
-            width: 100%;
-            height: 500px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 15px;
-            margin-bottom: 30px;
             overflow: hidden;
-            border: 3px solid #667eea;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .world {
+            position: absolute;
+            width: 3000px;
+            height: 2000px;
+            background: linear-gradient(135deg, #87ceeb 0%, #e0f6ff 100%);
+            top: 0;
+            left: 0;
+        }
+
+        .tree {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: #2d5016;
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 0 0 15px #4a7c2c;
+        }
+
+        .tree::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 5px;
+            width: 30px;
+            height: 25px;
+            background: #6b4423;
+            border-radius: 5px;
+        }
+
+        .water {
+            position: absolute;
+            background: linear-gradient(135deg, #1e90ff 0%, #00bfff 100%);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(30, 144, 255, 0.5);
+        }
+
+        .rock {
+            position: absolute;
+            width: 50px;
+            height: 40px;
+            background: #8b8b8b;
+            border-radius: 50%;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
         }
 
         .player {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5em;
+            font-size: 1.3em;
             user-select: none;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            cursor: move;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             border: 3px solid #fff;
+            z-index: 100;
+            cursor: move;
         }
 
         .enemy {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5em;
+            font-size: 1.3em;
             user-select: none;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             border: 3px solid #fff;
+            z-index: 99;
+        }
+
+        .npc {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1em;
+            user-select: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid #fff;
+            z-index: 98;
+        }
+
+        .camera {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .ui-panel {
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-value {
+            color: #667eea;
         }
 
         .controls {
             display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 10px;
         }
 
         button {
-            padding: 12px 30px;
-            font-size: 1em;
+            padding: 12px;
+            font-size: 0.9em;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s ease;
-        }
-
-        .btn-start {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
-        .btn-start:hover {
+        button:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-start:active {
+        button:active {
             transform: scale(0.98);
         }
 
         .message {
-            font-size: 1.3em;
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: #333;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
             font-weight: bold;
-            color: #667eea;
-            min-height: 30px;
-            margin-top: 20px;
-            animation: slideIn 0.5s ease;
-        }
-
-        .message.caught {
-            color: #f5576c;
         }
 
         .message.success {
-            color: #4facfe;
+            background: #d4edda;
+            color: #155724;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .message.danger {
+            background: #f8d7da;
+            color: #721c24;
         }
 
-        .instructions {
+        .legend {
             background: #f0f0f0;
             padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 0.9em;
-            color: #666;
-            line-height: 1.6;
+            border-radius: 10px;
+            font-size: 0.85em;
+            color: #333;
         }
 
-        @media (max-width: 600px) {
-            .game-area {
-                height: 350px;
-            }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
 
-            h1 {
-                font-size: 1.8em;
-            }
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
 
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+
+        @media (max-width: 1200px) {
             .container {
-                padding: 20px;
+                flex-direction: column;
+            }
+
+            .ui-panel {
+                width: 100%;
+            }
+
+            .game-wrapper {
+                height: 500px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏃 TAG GAME</h1>
-        
-        <div class="stats">
-            <div class="stat">
-                <div>Escaped</div>
-                <div class="stat-value" id="escaped">0</div>
-            </div>
-            <div class="stat">
-                <div>Caught</div>
-                <div class="stat-value" id="caught">0</div>
-            </div>
-            <div class="stat">
-                <div>Time</div>
-                <div class="stat-value" id="timer">30s</div>
+        <div class="game-wrapper">
+            <div class="camera" id="camera">
+                <div class="world" id="world">
+                    <div class="player" id="player">🤖</div>
+                    <div class="enemy" id="enemy">👾</div>
+                </div>
             </div>
         </div>
 
-        <div class="game-area" id="gameArea">
-            <div class="player" id="player">🤖</div>
-            <div class="enemy" id="enemy">👾</div>
-        </div>
+        <div class="ui-panel">
+            <div>
+                <h1 style="color: #333; font-size: 1.8em; margin-bottom: 10px;">🌍 Open World</h1>
+                <p style="color: #666; font-size: 0.9em;">Explore the world and avoid enemies!</p>
+            </div>
 
-        <div class="controls">
-            <button class="btn-start" onclick="startGame()">▶️ Start Game</button>
-            <button class="btn-start" onclick="resetGame()">🔄 Reset</button>
-        </div>
+            <div class="stats">
+                <div class="stat">
+                    <span>Escaped:</span>
+                    <span class="stat-value" id="escaped">0</span>
+                </div>
+                <div class="stat">
+                    <span>Caught:</span>
+                    <span class="stat-value" id="caught">0</span>
+                </div>
+                <div class="stat">
+                    <span>Position:</span>
+                    <span class="stat-value" id="position">0, 0</span>
+                </div>
+                <div class="stat">
+                    <span>Distance:</span>
+                    <span class="stat-value" id="distance">0m</span>
+                </div>
+            </div>
 
-        <div class="message" id="message">Click Start Game to begin!</div>
+            <div class="legend">
+                <div style="font-weight: bold; margin-bottom: 10px;">Legend:</div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🤖</div>
+                    <span>You</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);">👾</div>
+                    <span>Enemy Chaser</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);">🧙</div>
+                    <span>NPCs (Roaming)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background: #2d5016;">🌲</div>
+                    <span>Trees (Hide)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background: #8b8b8b;">🪨</div>
+                    <span>Rocks (Obstacles)</span>
+                </div>
+            </div>
 
-        <div class="instructions">
-            <strong>How to Play:</strong><br>
-            🖱️ Move your character (blue circle) using your mouse to stay inside the game area<br>
-            👾 Avoid the enemy (red circle) for 30 seconds<br>
-            ✅ Escape successfully = +1 point<br>
-            ❌ Get caught = -1 point<br>
-            First to 5 wins! 🏆
+            <div class="message" id="message">Click Start Game to begin exploring!</div>
+
+            <div class="controls">
+                <button onclick="startGame()">▶️ Start Exploring</button>
+                <button onclick="resetGame()">🔄 Reset Game</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const gameArea = document.getElementById('gameArea');
+        const world = document.getElementById('world');
+        const camera = document.getElementById('camera');
         const player = document.getElementById('player');
         const enemy = document.getElementById('enemy');
         const messageEl = document.getElementById('message');
-        const timerEl = document.getElementById('timer');
+        const positionEl = document.getElementById('position');
+        const distanceEl = document.getElementById('distance');
         const escapedEl = document.getElementById('escaped');
         const caughtEl = document.getElementById('caught');
 
-        let playerPos = { x: 50, y: 50 };
-        let enemyPos = { x: 400, y: 300 };
+        let playerPos = { x: 1500, y: 1000 };
+        let enemyPos = { x: 800, y: 600 };
         let escaped = 0;
         let caught = 0;
         let gameActive = false;
-        let timeLeft = 30;
         let gameStarted = false;
-        let roundInProgress = false;
 
-        let gameWidth = 800;
-        let gameHeight = 500;
-        const playerSize = 50;
-        const enemySize = 50;
-        const enemySpeed = 2.5;
+        const worldWidth = 3000;
+        const worldHeight = 2000;
+        const playerSize = 40;
+        const enemySize = 40;
+        const enemySpeed = 1.8;
+        const npcSpeed = 0.8;
 
-        // Update game dimensions when window loads or resizes
-        function updateGameDimensions() {
-            gameWidth = gameArea.offsetWidth;
-            gameHeight = gameArea.offsetHeight;
+        // Create world objects
+        function createWorld() {
+            // Create trees
+            const treePositions = [
+                { x: 300, y: 300 }, { x: 600, y: 500 }, { x: 1000, y: 200 },
+                { x: 1200, y: 800 }, { x: 1800, y: 400 }, { x: 2200, y: 600 },
+                { x: 2500, y: 1000 }, { x: 2700, y: 1400 }, { x: 400, y: 1200 },
+                { x: 800, y: 1500 }, { x: 1400, y: 1800 }, { x: 2000, y: 1600 }
+            ];
+
+            treePositions.forEach(pos => {
+                const tree = document.createElement('div');
+                tree.className = 'tree';
+                tree.style.left = pos.x + 'px';
+                tree.style.top = pos.y + 'px';
+                world.appendChild(tree);
+            });
+
+            // Create water
+            const waterPositions = [
+                { x: 500, y: 1200, w: 300, h: 200 },
+                { x: 2000, y: 300, w: 400, h: 250 },
+                { x: 1000, y: 1400, w: 350, h: 180 }
+            ];
+
+            waterPositions.forEach(pos => {
+                const water = document.createElement('div');
+                water.className = 'water';
+                water.style.left = pos.x + 'px';
+                water.style.top = pos.y + 'px';
+                water.style.width = pos.w + 'px';
+                water.style.height = pos.h + 'px';
+                world.appendChild(water);
+            });
+
+            // Create rocks
+            const rockPositions = [
+                { x: 700, y: 300 }, { x: 1500, y: 500 }, { x: 2300, y: 800 },
+                { x: 600, y: 1800 }, { x: 2100, y: 1200 }, { x: 900, y: 600 }
+            ];
+
+            rockPositions.forEach(pos => {
+                const rock = document.createElement('div');
+                rock.className = 'rock';
+                rock.style.left = pos.x + 'px';
+                rock.style.top = pos.y + 'px';
+                world.appendChild(rock);
+            });
+
+            // Create NPCs
+            const npcPositions = [
+                { x: 400, y: 400 },
+                { x: 1800, y: 1200 },
+                { x: 2400, y: 500 }
+            ];
+
+            npcPositions.forEach((pos, index) => {
+                const npc = document.createElement('div');
+                npc.className = 'npc';
+                npc.textContent = '🧙';
+                npc.style.left = pos.x + 'px';
+                npc.style.top = pos.y + 'px';
+                npc.dataset.index = index;
+                npc.dataset.dirX = Math.random() > 0.5 ? 1 : -1;
+                npc.dataset.dirY = Math.random() > 0.5 ? 1 : -1;
+                world.appendChild(npc);
+            });
         }
 
-        window.addEventListener('load', updateGameDimensions);
-        window.addEventListener('resize', updateGameDimensions);
-
-        // Mouse move listener for player
-        document.addEventListener('mousemove', (e) => {
-            if (!gameActive) return;
-
-            const rect = gameArea.getBoundingClientRect();
-            const x = e.clientX - rect.left - playerSize / 2;
-            const y = e.clientY - rect.top - playerSize / 2;
-
-            playerPos.x = Math.min(Math.max(x, 0), gameWidth - playerSize);
-            playerPos.y = Math.min(Math.max(y, 0), gameHeight - playerSize);
+        function updateCamera() {
+            const cameraCenterX = camera.offsetWidth / 2;
+            const cameraCenterY = camera.offsetHeight / 2;
             
-            updatePlayerPosition();
-        });
+            const offsetX = playerPos.x - cameraCenterX;
+            const offsetY = playerPos.y - cameraCenterY;
+
+            world.style.transform = `translate(-${offsetX}px, -${offsetY}px)`;
+        }
 
         function updatePlayerPosition() {
             player.style.left = playerPos.x + 'px';
             player.style.top = playerPos.y + 'px';
+            updateCamera();
+            updateStats();
         }
 
         function updateEnemyPosition() {
             enemy.style.left = enemyPos.x + 'px';
             enemy.style.top = enemyPos.y + 'px';
+        }
+
+        function updateNPCs() {
+            const npcs = document.querySelectorAll('.npc');
+            npcs.forEach(npc => {
+                let x = parseFloat(npc.style.left);
+                let y = parseFloat(npc.style.top);
+                let dirX = parseFloat(npc.dataset.dirX);
+                let dirY = parseFloat(npc.dataset.dirY);
+
+                x += dirX * npcSpeed;
+                y += dirY * npcSpeed;
+
+                if (x <= 0 || x >= worldWidth - 35) dirX *= -1;
+                if (y <= 0 || y >= worldHeight - 35) dirY *= -1;
+
+                npc.style.left = x + 'px';
+                npc.style.top = y + 'px';
+                npc.dataset.dirX = dirX;
+                npc.dataset.dirY = dirY;
+            });
         }
 
         function moveEnemy() {
@@ -293,119 +485,118 @@
                 enemyPos.y += (dy / distance) * enemySpeed;
             }
 
-            enemyPos.x = Math.max(0, Math.min(enemyPos.x, gameWidth - enemySize));
-            enemyPos.y = Math.max(0, Math.min(enemyPos.y, gameHeight - enemySize));
+            enemyPos.x = Math.max(0, Math.min(enemyPos.x, worldWidth - enemySize));
+            enemyPos.y = Math.max(0, Math.min(enemyPos.y, worldHeight - enemySize));
 
             updateEnemyPosition();
 
-            if (checkCollision()) {
+            if (checkCollision(playerPos, enemyPos)) {
                 caught++;
                 endRound(false);
             }
         }
 
-        function checkCollision() {
-            const dx = (playerPos.x + playerSize / 2) - (enemyPos.x + enemySize / 2);
-            const dy = (playerPos.y + playerSize / 2) - (enemyPos.y + enemySize / 2);
+        function checkCollision(pos1, pos2) {
+            const dx = (pos1.x + playerSize / 2) - (pos2.x + enemySize / 2);
+            const dy = (pos1.y + playerSize / 2) - (pos2.y + enemySize / 2);
             const distance = Math.sqrt(dx * dx + dy * dy);
-            return distance < playerSize;
+            return distance < playerSize + 10;
         }
 
-        function startGame() {
-            if (gameStarted || roundInProgress) return;
+        function updateStats() {
+            positionEl.textContent = `${Math.round(playerPos.x)}, ${Math.round(playerPos.y)}`;
+            const dist = Math.sqrt(
+                Math.pow(playerPos.x - enemyPos.x, 2) + 
+                Math.pow(playerPos.y - enemyPos.y, 2)
+            );
+            distanceEl.textContent = Math.round(dist) + 'm';
+        }
+
+        // Mouse move listener for player
+        document.addEventListener('mousemove', (e) => {
+            if (!gameActive) return;
+
+            const rect = camera.getBoundingClientRect();
+            const cameraX = parseFloat(world.style.transform.match(/translate\(-?(\d+)/)?.[1] || 0);
+            const cameraY = parseFloat(world.style.transform.match(/,\s*-?(\d+)/)?.[1] || 0);
+
+            const x = e.clientX - rect.left + cameraX - playerSize / 2;
+            const y = e.clientY - rect.top + cameraY - playerSize / 2;
+
+            playerPos.x = Math.min(Math.max(x, 0), worldWidth - playerSize);
+            playerPos.y = Math.min(Math.max(y, 0), worldHeight - playerSize);
             
-            updateGameDimensions();
+            updatePlayerPosition();
+        });
+
+        function startGame() {
+            if (gameStarted) return;
             
             gameActive = true;
             gameStarted = true;
-            roundInProgress = true;
-            timeLeft = 30;
-            messageEl.textContent = '🎮 Game Started! Avoid the enemy!';
-            messageEl.classList.remove('caught', 'success');
+            messageEl.textContent = '🎮 Exploration started! Avoid the enemy!';
+            messageEl.classList.remove('danger', 'success');
 
-            // Reset positions
-            playerPos = { x: 50, y: 50 };
-            enemyPos = { x: gameWidth - 100, y: gameHeight - 100 };
+            playerPos = { x: 1500, y: 1000 };
+            enemyPos = { x: 800, y: 600 };
             updatePlayerPosition();
             updateEnemyPosition();
 
             const gameLoop = setInterval(() => {
                 if (gameActive) {
                     moveEnemy();
+                    updateNPCs();
                 } else {
                     clearInterval(gameLoop);
                 }
             }, 50);
-
-            const timerInterval = setInterval(() => {
-                timeLeft--;
-                timerEl.textContent = timeLeft + 's';
-
-                if (timeLeft <= 0) {
-                    gameActive = false;
-                    clearInterval(gameLoop);
-                    clearInterval(timerInterval);
-                    escaped++;
-                    endRound(true);
-                }
-            }, 1000);
         }
 
         function endRound(success) {
             gameActive = false;
-            gameStarted = false;
 
             if (success) {
-                messageEl.textContent = '✅ You Escaped! +1 point';
+                escaped++;
+                messageEl.textContent = '✅ You escaped! Keep exploring!';
                 messageEl.classList.add('success');
-                messageEl.classList.remove('caught');
+                messageEl.classList.remove('danger');
             } else {
-                messageEl.textContent = '❌ You Got Tagged! -1 point';
-                messageEl.classList.add('caught');
+                messageEl.textContent = '❌ You got caught! Try again!';
+                messageEl.classList.add('danger');
                 messageEl.classList.remove('success');
             }
 
             escapedEl.textContent = escaped;
             caughtEl.textContent = caught;
 
-            // Check win condition
-            if (escaped >= 5) {
-                messageEl.textContent = '🏆 YOU ARE THE TAG CHAMPION! 🏆';
-                messageEl.classList.add('success');
-                roundInProgress = false;
-            } else if (caught >= 5) {
-                messageEl.textContent = '😢 Enemy wins! Game Over!';
-                messageEl.classList.add('caught');
-                roundInProgress = false;
-            } else {
-                setTimeout(() => {
-                    messageEl.textContent = 'Click Start Game for the next round!';
-                    roundInProgress = false;
-                }, 2000);
-            }
+            setTimeout(() => {
+                gameActive = true;
+                playerPos = { x: 1500, y: 1000 };
+                enemyPos = { x: 800, y: 600 };
+                updatePlayerPosition();
+                updateEnemyPosition();
+                messageEl.textContent = '🎮 Round continues! Keep exploring!';
+            }, 2000);
         }
 
         function resetGame() {
             gameActive = false;
             gameStarted = false;
-            roundInProgress = false;
             escaped = 0;
             caught = 0;
-            timeLeft = 30;
-            playerPos = { x: 50, y: 50 };
-            enemyPos = { x: gameWidth - 100, y: gameHeight - 100 };
+            playerPos = { x: 1500, y: 1000 };
+            enemyPos = { x: 800, y: 600 };
 
             updatePlayerPosition();
             updateEnemyPosition();
             escapedEl.textContent = escaped;
             caughtEl.textContent = caught;
-            timerEl.textContent = '30s';
-            messageEl.textContent = 'Click Start Game to begin!';
-            messageEl.classList.remove('caught', 'success');
+            messageEl.textContent = 'Click Start Exploring to begin!';
+            messageEl.classList.remove('danger', 'success');
         }
 
         // Initialize
-        updateGameDimensions();
+        createWorld();
         updatePlayerPosition();
         updateEnemyPosition();
     </script>
