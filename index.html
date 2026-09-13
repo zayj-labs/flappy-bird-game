@@ -211,12 +211,12 @@
         const jumpStrength = -10;
         let score = 0;
         let gameOver = false;
-        let gameSpeed = 5;
+        let gameSpeed = 3;
         const pipeGap = 150;
         const pipeWidth = 60;
-        let pipeSpawnRate = 90;
+        let pipeSpawnRate = 100;
         let pipeCounter = 0;
-        let obstacleSpawnRate = 150;
+        let obstacleSpawnRate = 180;
         let obstacleCounter = 0;
         let level = 1;
 
@@ -240,10 +240,10 @@
             gameOver = false;
             pipeCounter = 0;
             obstacleCounter = 0;
-            gameSpeed = 5;
+            gameSpeed = 3;
             level = 1;
-            pipeSpawnRate = 90;
-            obstacleSpawnRate = 150;
+            pipeSpawnRate = 100;
+            obstacleSpawnRate = 180;
             scoreDisplay.textContent = `Score: ${score}`;
             difficultyDisplay.textContent = `Level: ${level}`;
             gameOverScreen.classList.remove('show');
@@ -340,12 +340,14 @@
                     score++;
                     scoreDisplay.textContent = `Score: ${score}`;
                     
-                    // Increase difficulty every 5 points
-                    if (score % 5 === 0) {
-                        level = Math.floor(score / 5) + 1;
-                        gameSpeed = 5 + (level - 1) * 0.5;
-                        pipeSpawnRate = Math.max(60, 90 - (level - 1) * 5);
-                        obstacleSpawnRate = Math.max(100, 150 - (level - 1) * 10);
+                    // SLOW increase in difficulty - every 10 points
+                    if (score % 10 === 0) {
+                        level = Math.floor(score / 10) + 1;
+                        // Very minimal speed increase (0.2 per level instead of 0.5)
+                        gameSpeed = 3 + (level - 1) * 0.2;
+                        // Slightly reduce spawn rate (obstacles come a bit more frequent)
+                        pipeSpawnRate = Math.max(90, 100 - (level - 1) * 2);
+                        obstacleSpawnRate = Math.max(160, 180 - (level - 1) * 3);
                         difficultyDisplay.textContent = `Level: ${level}`;
                     }
                 }
